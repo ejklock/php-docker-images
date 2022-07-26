@@ -17,6 +17,7 @@ RUN cd /usr/src/php/ext/gd && make
 RUN cp /usr/src/php/ext/gd/modules/gd.so /usr/local/lib/php/extensions/no-debug-non-zts-20190902/gd.so
 RUN docker-php-ext-install -j$(nproc) gd gettext zip pdo_mysql mbstring intl exif pcntl bcmath gmp mysqli ldap
 RUN echo 'memory_limit=2G' > /usr/local/etc/php/conf.d/memory-limit.ini
+RUN a2enmod rewrite
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
