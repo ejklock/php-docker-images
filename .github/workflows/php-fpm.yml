@@ -49,5 +49,5 @@ jobs:
         with:
           context: ./
           push: true
-          tags: 'ejklock/php-fpm:${{env.CURRENT_VERSION}}'
+          tags: 'ejklock/php-fpm:${{env.VERSION}}'
        
