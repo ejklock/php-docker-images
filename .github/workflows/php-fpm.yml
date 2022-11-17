@@ -13,8 +13,8 @@ on:
       tags:
         description: 'Insira a TAG para o cenário'
 env:
-  VERSION_FILE: .env
-  VERSION_EXTRACT_PATTERN: '(?<=CURRENT_VERSION=).+'
+  VERSION_FILE: ./.env
+  VERSION_EXTRACT_PATTERN: '(?<=NEXT_PUBLIC_VERSION=).+'
 
 jobs:
   BuildRelease:
