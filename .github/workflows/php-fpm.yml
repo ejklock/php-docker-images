@@ -13,8 +13,8 @@ on:
       tags:
         description: 'Insira a TAG para o cenário'
 env:
-  VERSION_FILE: ./.env
-  VERSION_EXTRACT_PATTERN: '(?<=VERSION=).+'
+  VERSION_FILE: .env
+  VERSION_EXTRACT_PATTERN: '(?<=CURRENT_VERSION=).+'
 
 jobs:
   BuildRelease:
@@ -50,5 +50,5 @@ jobs:
         with:
           context: ./
           push: true
-          tags: 'ejklock/php-fpm:${{env.CURRENT_VERSION}}'
+          tags: 'ejklock/php-fpm:${{env.TAG_NAME}}'
        
