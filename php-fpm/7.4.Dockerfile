@@ -1,4 +1,4 @@
-FROM php:7.3-fpm
+FROM php:7.4-fpm
 
 # Arguments defined in docker-compose.yml
 ARG uid=1000
@@ -11,7 +11,7 @@ RUN docker-php-ext-enable imagick
 RUN docker-php-ext-configure gd --enable-gd --with-freetype --with-jpeg --with-webp
 RUN cd /usr/src/php/ext/gd && make
 RUN cp /usr/src/php/ext/gd/modules/gd.so /usr/local/lib/php/extensions/no-debug-non-zts-20190902/gd.so
-RUN docker-php-ext-install -j$(nproc) gd gettext zip pdo_mysql mbstring intl exif pcntl bcmath gmp mysqli ldap
+RUN docker-php-ext-install -j$(nproc) gd gettext zip pdo_mysql mbstring intl exif pcntl bcmath gmp mysqli ldap opcache sockets
 
 RUN echo 'memory_limit=2G' > /usr/local/etc/php/conf.d/memory-limit.ini
 

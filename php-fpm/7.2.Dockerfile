@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y git curl libpng-dev libonig-dev libzip-
 RUN pecl install xdebug-2.9.2 && docker-php-ext-enable xdebug
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 RUN docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-webp-dir=/usr/include/ --with-jpeg-dir=/usr/include/
-RUN docker-php-ext-install gettext zip pdo_mysql mbstring intl exif pcntl bcmath gd gmp
+RUN docker-php-ext-install gettext zip pdo_mysql mbstring intl exif pcntl bcmath gd gmp opcache sockets
 RUN echo 'memory_limit=2G' > /usr/local/etc/php/conf.d/memory-limit.ini
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
