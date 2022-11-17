@@ -14,6 +14,7 @@ on:
         description: 'Insira a TAG para o cenário'
 env:
   VERSION_FILE: ./env
+  VERSION_EXTRACT_PATTERN: '(?<=VERSION=).+'
 
 jobs:
   BuildRelease:
