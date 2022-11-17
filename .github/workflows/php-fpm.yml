@@ -13,7 +13,7 @@ on:
       tags:
         description: 'Insira a TAG para o cenário'
 env:
-  VERSION_FILE: .env
+  VERSION_FILE: ./env
 
 jobs:
   BuildRelease:
@@ -26,8 +26,8 @@ jobs:
         uses: HardNorth/github-version-generate@v1.1.1
         with:
           version-source: file
-          version-file: ${{env.VERSION}}
-          version-file-extraction-pattern: ${{env.VERSION}}
+          version-file: ${{env.VERSION_FILE}}
+          version-file-extraction-pattern: ${{env.VERSION_EXTRACT_PATTERN}}
 
       - name: Checkout
         uses: actions/checkout@v2
@@ -49,5 +49,5 @@ jobs:
         with:
           context: ./
           push: true
-          tags: 'ejklock/php-fpm:${{env.VERSION}}'
+          tags: 'ejklock/php-fpm:${{env.CURRENT_VERSION}}'
        
