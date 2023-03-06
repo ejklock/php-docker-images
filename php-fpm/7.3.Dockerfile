@@ -6,7 +6,7 @@ ARG user=app
 
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y git curl libpng-dev libonig-dev libzip-dev libxml2-dev unzip libfreetype6-dev libwebp-dev libjpeg62-turbo-dev libpng-dev libgmp-dev
+RUN apt-get update && apt-get install -y git curl libpq-dev libpng-dev libonig-dev libzip-dev libxml2-dev unzip libfreetype6-dev libwebp-dev libjpeg62-turbo-dev libpng-dev libgmp-dev
 
 RUN pecl install xdebug-2.9.2 && docker-php-ext-enable xdebug
 
@@ -16,7 +16,7 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 RUN docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-webp-dir=/usr/include/ --with-jpeg-dir=/usr/include/
 
 # Install PHP extensions
-RUN docker-php-ext-install mysqli zip pdo_mysql mbstring intl exif pcntl bcmath gd gmp opcache sockets
+RUN docker-php-ext-install mysqli zip pgsql pdo_pgsql pdo_mysql mbstring intl exif pcntl bcmath gd gmp opcache sockets
 
 RUN echo 'memory_limit=2G' > /usr/local/etc/php/conf.d/memory-limit.ini
 
