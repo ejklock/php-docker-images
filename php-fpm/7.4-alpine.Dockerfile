@@ -5,7 +5,7 @@ ARG uid=1000
 ARG user=app
 
 RUN apk update && \
-    apk add --no-cache git curl postgresql-dev libpng-dev oniguruma-dev libzip-dev openldap-dev libxml2-dev unzip libwebp-dev libpng-dev gmp-dev freetype-dev imagemagick-dev libjpeg-turbo-dev libpng-dev libzip-dev g++ && \
+    apk add --no-cache gettext-dev autoconf make git curl postgresql-dev libpng-dev oniguruma-dev libzip-dev openldap-dev libxml2-dev unzip libwebp-dev libpng-dev gmp-dev freetype-dev imagemagick-dev libjpeg-turbo-dev libpng-dev libzip-dev g++ && \
     rm -rf /var/cache/apk/*
 
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp && \
@@ -18,8 +18,7 @@ RUN echo 'memory_limit=512M' > /usr/local/etc/php/conf.d/memory-limit.ini
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-RUN adduser -D -g 'www-data' -G www-data,root -u $uid -h /home/$user $user && \
-    mkdir -p /home/$user/.composer && chown -R $user:$user /home/$user
+RUN addgroup -g $uid $user && adduser -u $uid -G $user -h /home/$user -s /bin/sh -D $user
 
 WORKDIR /var/www/app
 
