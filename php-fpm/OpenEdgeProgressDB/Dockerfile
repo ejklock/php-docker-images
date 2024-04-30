@@ -19,20 +19,14 @@ RUN docker-php-ext-install -j$(nproc) gd gettext zip pgsql pdo_pgsql pdo_mysql m
 
 RUN docker-php-ext-configure pdo_odbc --with-pdo-odbc=unixODBC,/usr && docker-php-ext-install pdo_odbc
 
-
 COPY PROGRESS_DATADIRECT_ODBC_OE_LINUX_64.tar.gz silent.cfg /tmp/
 
-# Descompactando o arquivo tar.gz
-RUN tar -xvf /tmp/PROGRESS_DATADIRECT_ODBC_OE_LINUX_64.tar.gz -C /tmp/
+# Copy install script into the image
+COPY install.sh /install.sh
+RUN chmod +x /install.sh
 
-# Tornando o script executável
-RUN chmod +x /tmp/unixmi.ksh
-
-# Executando o script unixmi.ksh
-RUN cd /tmp && ./unixmi.ksh -f /tmp/silent.cfg
-
-# Limpando os arquivos temporários
-RUN rm -rf /tmp/PROGRESS_DATADIRECT_ODBC_OE_LINUX_64.tar.gz /tmp/silent.cfg /tmp/unixmi.ksh
+# Run install script during image building
+RUN /install.sh
 
 RUN echo 'memory_limit=2G' > /usr/local/etc/php/conf.d/memory-limit.ini
 
@@ -42,13 +36,14 @@ RUN useradd -G www-data,root -u $uid -d /home/$user $user
 
 RUN mkdir -p /home/$user/.composer && chown -R $user:$user /home/$user
 
-COPY utils/odbc.ini /etc/odbc.ini
-COPY utils/odbcinst.ini /etc/odbcinst.ini
+COPY odbc.ini /etc/odbc.ini
+COPY odbcinst.ini /etc/odbcinst.ini
 
 # Sets the LD_LIBRARY_PATH environment variable
-
 ENV LD_LIBRARY_PATH /opt/connectforodbc/lib:$LD_LIBRARY_PATH
 
 WORKDIR /var/www/app
+
+ENV USER root
 
 USER app

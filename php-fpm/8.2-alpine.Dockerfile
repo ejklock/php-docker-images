@@ -1,11 +1,11 @@
-FROM php:8.1-fpm-alpine
+FROM php:8.2-fpm-alpine
 
 # Arguments defined in docker-compose.yml
 ARG uid=1000
-ARG user=www-data
+ARG user=app
 
 RUN apk update && \
-    apk add --no-cache git curl postgresql-dev ${PHPIZE_DEPS} imagemagick imagemagick-dev gettext-dev libpng-dev oniguruma-dev libzip-dev openldap-dev libxml2-dev unzip libwebp-dev libpng-dev gmp-dev freetype-dev imagemagick-dev libjpeg-turbo-dev libpng-dev libzip-dev g++ autoconf make && \
+    apk add --no-cache linux-headers git curl postgresql-dev ${PHPIZE_DEPS} imagemagick imagemagick-dev gettext-dev libpng-dev oniguruma-dev libzip-dev openldap-dev libxml2-dev unzip libwebp-dev libpng-dev gmp-dev freetype-dev imagemagick-dev libjpeg-turbo-dev libpng-dev libzip-dev g++ autoconf make && \
     rm -rf /var/cache/apk/*
 
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp && \
