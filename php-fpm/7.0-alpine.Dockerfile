@@ -1,11 +1,11 @@
-FROM php:7.2-fpm-alpine
+FROM php:7.0-fpm-alpine
 
 # Arguments defined in docker-compose.yml
 ARG uid=1000
 ARG user=app
 
 RUN apk update && apk upgrade && apk add --no-cache \
-    git curl autoconf make postgresql-dev libpng-dev \
+    git icu-dev curl autoconf make postgresql-dev libpng-dev \
     oniguruma-dev libzip-dev openldap-dev libxml2-dev \
     unzip libwebp-dev libpng-dev gmp-dev freetype-dev \
     imagemagick-dev libjpeg-turbo-dev libpng-dev \
@@ -15,7 +15,7 @@ RUN apk update && apk upgrade && apk add --no-cache \
 RUN docker-php-ext-configure gd && \
     docker-php-ext-install -j$(nproc) gd gettext zip pgsql pdo_pgsql pdo_mysql mbstring intl exif pcntl bcmath gmp mysqli ldap opcache sockets
 
-RUN pecl install imagick-3.4.4 xdebug-3.1.6 && \
+RUN pecl install imagick-3.4.4 xdebug-2.6.1 && \
     docker-php-ext-enable imagick xdebug
 
 RUN echo 'memory_limit=512M' > /usr/local/etc/php/conf.d/memory-limit.ini
