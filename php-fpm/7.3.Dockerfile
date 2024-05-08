@@ -6,7 +6,7 @@ ARG user=app
 
 RUN apt-get update && \
     apt-get update && apt-get upgrade -y && \ 
-    apt-get install -y git curl libpq-dev libpng-dev \
+    apt-get install -y --no-install-recommends git curl libpq-dev libpng-dev \
     libonig-dev libzip-dev libldap2-dev libxml2-dev \
     unzip libwebp-dev libpng-dev libgmp-dev libfreetype6-dev \
     libmagickwand-dev libjpeg62-turbo-dev libpng-dev libzip-dev \

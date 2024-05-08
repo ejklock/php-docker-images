@@ -4,7 +4,7 @@ FROM php:8.2-fpm
 ARG uid=1000
 ARG user=app
 
-RUN apt-get update && apt-get upgrade -y &&  apt-get install -y \
+RUN apt-get update && apt-get upgrade -y &&  apt-get install --no-install-recommends -y \
     git curl libpq-dev libpng-dev libonig-dev libmagickwand-dev\
     libzip-dev libldap2-dev libxml2-dev unzip libwebp-dev libpng-dev \
     libgmp-dev libfreetype6-dev libmagickwand-dev libjpeg62-turbo-dev \

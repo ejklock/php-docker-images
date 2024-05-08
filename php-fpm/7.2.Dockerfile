@@ -5,7 +5,7 @@ ARG uid=1000
 ARG user=app
 
 
-RUN apt-get update && apt-get upgrade -y && apt-get install -y \
+RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
     git curl libldap2-dev libpq-dev libpng-dev libonig-dev libzip-dev libxml2-dev unzip \ 
     libfreetype6-dev libwebp-dev libjpeg62-turbo-dev libpng-dev libgmp-dev && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
