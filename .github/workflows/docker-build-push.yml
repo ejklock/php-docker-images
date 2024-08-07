@@ -108,37 +108,38 @@ jobs:
         id: prepare
         run: |
           VERSION="${{ matrix.version }}"
-          DOCKER_TAG="${VERSION//_/.}"
-          if [[ "$VERSION" == *"alpine"* ]]; then
-            DOCKER_TAG="${DOCKER_TAG%-alpine}-alpine"
-          elif [[ "$VERSION" == "php_fpm" ]]; then
-            DOCKER_TAG="fpm"
-          elif [[ "$VERSION" == "php_apache" ]]; then
-            DOCKER_TAG="apache"
-          fi
-          echo "docker_tag=$DOCKER_TAG" >> $GITHUB_OUTPUT
-
-          # Check for Dockerfile existence (case-insensitive)
-          DOCKERFILE=$(find ./php-fpm -iname "${DOCKER_TAG}.Dockerfile" -o -iname "${DOCKER_TAG}.DockerFile" | head -n 1)
-          if [ -z "$DOCKERFILE" ]; then
-            echo "Error: Dockerfile not found for version $DOCKER_TAG"
+          if [ -z "$VERSION" ]; then
+            echo "Error: Version is empty"
             exit 1
           fi
-          echo "dockerfile=$DOCKERFILE" >> $GITHUB_OUTPUT
 
-      - name: Build and push FPM images
-        if: ${{ matrix.version != 'php_apache' }}
+          DOCKER_TAG="${VERSION//_/.}"
+          if [[ "$VERSION" == *"alpine"* ]]; then
+            DOCKERFILE="php-fpm/${DOCKER_TAG%-alpine}.Dockerfile"
+            IMAGE_NAME="ejklock/php-fpm-alpine:${DOCKER_TAG%-alpine}"
+          elif [[ "$VERSION" == "php_fpm" ]]; then
+            DOCKERFILE="php-fpm/Dockerfile"
+            IMAGE_NAME="ejklock/php-fpm:latest"
+          elif [[ "$VERSION" == "php_apache" ]]; then
+            DOCKERFILE="php-apache/Dockerfile"
+            IMAGE_NAME="ejklock/php-apache:latest"
+          else
+            DOCKERFILE="php-fpm/${DOCKER_TAG}.Dockerfile"
+            IMAGE_NAME="ejklock/php-fpm:${DOCKER_TAG}"
+          fi
+
+          if [ ! -f "$DOCKERFILE" ]; then
+            echo "Error: Dockerfile not found: $DOCKERFILE"
+            exit 1
+          fi
+
+          echo "dockerfile=$DOCKERFILE" >> $GITHUB_OUTPUT
+          echo "image_name=$IMAGE_NAME" >> $GITHUB_OUTPUT
+
+      - name: Build and push image
         uses: docker/build-push-action@v4
         with:
-          context: ./php-fpm
+          context: ${{ contains(steps.prepare.outputs.dockerfile, 'php-apache') && './php-apache' || './php-fpm' }}
           file: ${{ steps.prepare.outputs.dockerfile }}
           push: true
-          tags: ejklock/php-${{ steps.prepare.outputs.docker_tag }}:latest
-
-      - name: Build and push Apache images
-        if: ${{ matrix.version == 'php_apache' }}
-        uses: docker/build-push-action@v4
-        with:
-          context: ./php-apache
-          push: true
-          tags: ejklock/php-apache:latest
+          tags: ${{ steps.prepare.outputs.image_name }}
