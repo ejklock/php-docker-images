@@ -27,100 +27,118 @@ jobs:
               - 'php-fpm/**'
             5_5:
               - 'php-fpm/5.5.Dockerfile'
+              - 'php-fpm/5.5.DockerFile'
             7_0:
               - 'php-fpm/7.0.Dockerfile'
+              - 'php-fpm/7.0.DockerFile'
             7_0_alpine:
               - 'php-fpm/7.0-alpine.Dockerfile'
+              - 'php-fpm/7.0-alpine.DockerFile'
             7_1:
               - 'php-fpm/7.1.Dockerfile'
+              - 'php-fpm/7.1.DockerFile'
             7_1_alpine:
               - 'php-fpm/7.1-alpine.Dockerfile'
+              - 'php-fpm/7.1-alpine.DockerFile'
             7_2:
               - 'php-fpm/7.2.Dockerfile'
+              - 'php-fpm/7.2.DockerFile'
             7_2_alpine:
               - 'php-fpm/7.2-alpine.Dockerfile'
+              - 'php-fpm/7.2-alpine.DockerFile'
             7_3:
               - 'php-fpm/7.3.Dockerfile'
+              - 'php-fpm/7.3.DockerFile'
             7_3_alpine:
               - 'php-fpm/7.3-alpine.Dockerfile'
+              - 'php-fpm/7.3-alpine.DockerFile'
             7_4:
               - 'php-fpm/7.4.Dockerfile'
+              - 'php-fpm/7.4.DockerFile'
             7_4_alpine:
               - 'php-fpm/7.4-alpine.Dockerfile'
+              - 'php-fpm/7.4-alpine.DockerFile'
             7_4_progress:
               - 'php-fpm/7.4-progress.Dockerfile'
+              - 'php-fpm/7.4-progress.DockerFile'
             8_0:
               - 'php-fpm/8.0.Dockerfile'
+              - 'php-fpm/8.0.DockerFile'
             8_0_alpine:
               - 'php-fpm/8.0-alpine.Dockerfile'
+              - 'php-fpm/8.0-alpine.DockerFile'
             8_1:
               - 'php-fpm/8.1.Dockerfile'
+              - 'php-fpm/8.1.DockerFile'
             8_1_alpine:
               - 'php-fpm/8.1-alpine.Dockerfile'
+              - 'php-fpm/8.1-alpine.DockerFile'
             8_2:
               - 'php-fpm/8.2.Dockerfile'
+              - 'php-fpm/8.2.DockerFile'
             8_2_alpine:
               - 'php-fpm/8.2-alpine.Dockerfile'
+              - 'php-fpm/8.2-alpine.DockerFile'
 
       - id: set-matrix
         run: |
           CHANGES=$(echo '${{ toJSON(steps.changes.outputs) }}' | jq -r 'to_entries | map(select(.value == "true")) | map(.key) | join(",")')
           echo "matrix={\"version\":[\"${CHANGES//,/\",\"}\"]}" >> $GITHUB_OUTPUT
 
- build-and-push:
-  needs: changes
-  if: ${{ needs.changes.outputs.matrix != '{"version":[]}' }}
-  runs-on: ubuntu-latest
-  strategy:
-    matrix: ${{fromJson(needs.changes.outputs.matrix)}}
-  steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+  build-and-push:
+    needs: changes
+    if: ${{ needs.changes.outputs.matrix != '{"version":[]}' }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: ${{fromJson(needs.changes.outputs.matrix)}}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
 
-    - name: Login to DockerHub
-      uses: docker/login-action@v2
-      with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: Prepare Docker tag and file
-      id: prepare
-      run: |
-        VERSION="${{ matrix.version }}"
-        DOCKER_TAG="${VERSION//_/.}"
-        if [[ "$VERSION" == *"alpine"* ]]; then
-          DOCKER_TAG="${DOCKER_TAG%-alpine}-alpine"
-        elif [[ "$VERSION" == "php_fpm" ]]; then
-          DOCKER_TAG="fpm"
-        elif [[ "$VERSION" == "php_apache" ]]; then
-          DOCKER_TAG="apache"
-        fi
-        echo "docker_tag=$DOCKER_TAG" >> $GITHUB_OUTPUT
-        
-        # Check for Dockerfile existence (case-insensitive)
-        DOCKERFILE=$(find ./php-fpm -iname "${DOCKER_TAG}.Dockerfile" -o -iname "${DOCKER_TAG}.DockerFile" | head -n 1)
-        if [ -z "$DOCKERFILE" ]; then
-          echo "Error: Dockerfile not found for version $DOCKER_TAG"
-          exit 1
-        fi
-        echo "dockerfile=$DOCKERFILE" >> $GITHUB_OUTPUT
+      - name: Prepare Docker tag and file
+        id: prepare
+        run: |
+          VERSION="${{ matrix.version }}"
+          DOCKER_TAG="${VERSION//_/.}"
+          if [[ "$VERSION" == *"alpine"* ]]; then
+            DOCKER_TAG="${DOCKER_TAG%-alpine}-alpine"
+          elif [[ "$VERSION" == "php_fpm" ]]; then
+            DOCKER_TAG="fpm"
+          elif [[ "$VERSION" == "php_apache" ]]; then
+            DOCKER_TAG="apache"
+          fi
+          echo "docker_tag=$DOCKER_TAG" >> $GITHUB_OUTPUT
 
-    - name: Build and push FPM images
-      if: ${{ matrix.version != 'php_apache' }}
-      uses: docker/build-push-action@v4
-      with:
-        context: ./php-fpm
-        file: ${{ steps.prepare.outputs.dockerfile }}
-        push: true
-        tags: ejklock/php-${{ steps.prepare.outputs.docker_tag }}:latest
+          # Check for Dockerfile existence (case-insensitive)
+          DOCKERFILE=$(find ./php-fpm -iname "${DOCKER_TAG}.Dockerfile" -o -iname "${DOCKER_TAG}.DockerFile" | head -n 1)
+          if [ -z "$DOCKERFILE" ]; then
+            echo "Error: Dockerfile not found for version $DOCKER_TAG"
+            exit 1
+          fi
+          echo "dockerfile=$DOCKERFILE" >> $GITHUB_OUTPUT
 
-    - name: Build and push Apache images
-      if: ${{ matrix.version == 'php_apache' }}
-      uses: docker/build-push-action@v4
-      with:
-        context: ./php-apache
-        push: true
-        tags: ejklock/php-apache:latest
+      - name: Build and push FPM images
+        if: ${{ matrix.version != 'php_apache' }}
+        uses: docker/build-push-action@v4
+        with:
+          context: ./php-fpm
+          file: ${{ steps.prepare.outputs.dockerfile }}
+          push: true
+          tags: ejklock/php-${{ steps.prepare.outputs.docker_tag }}:latest
+
+      - name: Build and push Apache images
+        if: ${{ matrix.version == 'php_apache' }}
+        uses: docker/build-push-action@v4
+        with:
+          context: ./php-apache
+          push: true
+          tags: ejklock/php-apache:latest
