@@ -12,67 +12,23 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
-      - uses: dorny/paths-filter@v2
-        id: changes
-        with:
-          base: ${{ github.ref }}
-          filters: |
-            php_apache:
-              - 'php-apache/**'
-            php_fpm:
-              - 'php-fpm/**'
-            5_5:
-              - 'php-fpm/5.5.Dockerfile'
-            7_0:
-              - 'php-fpm/7.0.Dockerfile'
-            7_0_alpine:
-              - 'php-fpm/7.0-alpine.Dockerfile'
-            7_1:
-              - 'php-fpm/7.1.Dockerfile'
-            7_1_alpine:
-              - 'php-fpm/7.1-alpine.Dockerfile'
-            7_2:
-              - 'php-fpm/7.2.Dockerfile'
-            7_2_alpine:
-              - 'php-fpm/7.2-alpine.Dockerfile'
-            7_3:
-              - 'php-fpm/7.3.Dockerfile'
-            7_3_alpine:
-              - 'php-fpm/7.3-alpine.Dockerfile'
-            7_4:
-              - 'php-fpm/7.4.Dockerfile'
-            7_4_alpine:
-              - 'php-fpm/7.4-alpine.Dockerfile'
-            8_0:
-              - 'php-fpm/8.0.Dockerfile'
-            8_0_alpine:
-              - 'php-fpm/8.0-alpine.Dockerfile'
-            8_1:
-              - 'php-fpm/8.1.Dockerfile'
-            8_1_alpine:
-              - 'php-fpm/8.1-alpine.Dockerfile'
-            8_2:
-              - 'php-fpm/8.2.Dockerfile'
-            8_2_alpine:
-              - 'php-fpm/8.2-alpine.Dockerfile'
-
-      - id: set-matrix
+      - name: Set up the matrix
+        id: set-matrix
         run: |
-          CHANGES=$(echo '${{ toJSON(steps.changes.outputs) }}' | jq -r 'to_entries | map(select(.value == "true")) | map(.key) | join(",")')
-           if [ -z "$CHANGES" ]; then
-             echo "matrix={\"version\":[]}" >> $GITHUB_OUTPUT
-           else
-             echo "matrix={\"version\":[\"${CHANGES//,/\",\"}\"]}" >> $GITHUB_OUTPUT
-           fi
+          versions=$(find php-apache php-fpm -type f -name '*.Dockerfile' | sed -e 's|php-apache/||' -e 's|php-fpm/||' -e 's|.Dockerfile||' | tr '\n' ',')
+          versions="${versions%,}" # Remove the trailing comma
+          echo "matrix={\"version\":[\"${versions//,/\",\"}\"]}" >> $GITHUB_OUTPUT
 
   build-and-push:
     needs: changes
     if: ${{ needs.changes.outputs.matrix != '{"version":[]}' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     strategy:
       matrix: ${{fromJson(needs.changes.outputs.matrix)}}
     steps:
@@ -92,33 +48,33 @@ jobs:
         id: prepare
         run: |
           VERSION="${{ matrix.version }}"
-           if [ -z "$VERSION" ]; then
-             echo "Error: Version is empty"
-             exit 1
-           fi
+          if [ -z "$VERSION" ]; then
+            echo "Error: Version is empty"
+            exit 1
+          fi
 
-           DOCKER_TAG="${VERSION//_/.}"
-           if [[ "$VERSION" == *"alpine"* ]]; then
-             DOCKERFILE="php-fpm/${DOCKER_TAG%-alpine}-alpine.Dockerfile"
-             IMAGE_NAME="ejklock/php-fpm-alpine:${DOCKER_TAG%-alpine}"
-           elif [[ "$VERSION" == "php_fpm" ]]; then
-             DOCKERFILE="php-fpm/Dockerfile"
-             IMAGE_NAME="ejklock/php-fpm:latest"
-           elif [[ "$VERSION" == "php_apache" ]]; then
-             DOCKERFILE="php-apache/Dockerfile"
-             IMAGE_NAME="ejklock/php-apache:latest"
-           else
-             DOCKERFILE="php-fpm/${DOCKER_TAG}.Dockerfile"
-             IMAGE_NAME="ejklock/php-fpm:${DOCKER_TAG}"
-           fi
+          DOCKER_TAG="${VERSION//_/.}"
+          if [[ "$VERSION" == *"alpine"* ]]; then
+            DOCKERFILE="php-fpm/${DOCKER_TAG%-alpine}-alpine.Dockerfile"
+            IMAGE_NAME="ejklock/php-fpm-alpine:${DOCKER_TAG%-alpine}"
+          elif [[ "$VERSION" == "php_fpm" ]]; then
+            DOCKERFILE="php-fpm/Dockerfile"
+            IMAGE_NAME="ejklock/php-fpm:latest"
+          elif [[ "$VERSION" == "php_apache" ]]; then
+            DOCKERFILE="php-apache/Dockerfile"
+            IMAGE_NAME="ejklock/php-apache:latest"
+          else
+            DOCKERFILE="php-fpm/${DOCKER_TAG}.Dockerfile"
+            IMAGE_NAME="ejklock/php-fpm:${DOCKER_TAG}"
+          fi
 
-           if [ ! -f "$DOCKERFILE" ]; then
-             echo "Error: Dockerfile not found: $DOCKERFILE"
-             exit 1
-           fi
+          if [ ! -f "$DOCKERFILE" ]; then
+            echo "Error: Dockerfile not found: $DOCKERFILE"
+            exit 1
+          fi
 
-           echo "dockerfile=$DOCKERFILE" >> $GITHUB_OUTPUT
-           echo "image_name=$IMAGE_NAME" >> $GITHUB_OUTPUT
+          echo "dockerfile=$DOCKERFILE" >> $GITHUB_OUTPUT
+          echo "image_name=$IMAGE_NAME" >> $GITHUB_OUTPUT
 
       - name: Build and push image
         uses: docker/build-push-action@v4
