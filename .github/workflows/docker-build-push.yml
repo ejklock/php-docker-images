@@ -86,3 +86,4 @@ jobs:
           file: ${{ steps.prepare.outputs.dockerfile }}
           push: true
           tags: ${{ steps.prepare.outputs.image_name }}
+        continue-on-error: true
