@@ -4,7 +4,6 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 ARG uid=1000
 ARG user=app
-
 ENV NVM_DIR=/home/${user}/.nvm
 ENV NODE_VERSION=18.20.3
 

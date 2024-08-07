@@ -29,7 +29,7 @@ jobs:
     if: ${{ needs.changes.outputs.matrix != '{"version":[]}' }}
     runs-on: ubuntu-latest
     concurrency:
-      group: docker-build-${{ github.workflow }}-${{ github.event_name }}
+      group: docker-build-${{ github.workflow }}-${{ github.event_name }}-${{ github.run_id }}
       cancel-in-progress: false
     strategy:
       matrix: ${{ fromJson(needs.changes.outputs.matrix) }}
