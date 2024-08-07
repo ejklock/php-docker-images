@@ -63,11 +63,11 @@ jobs:
       - id: set-matrix
         run: |
           CHANGES=$(echo '${{ toJSON(steps.changes.outputs) }}' | jq -r 'to_entries | map(select(.value == "true")) | map(.key) | join(",")')
-          if [ -z "$CHANGES" ]; then
-            echo "matrix={\"version\":[]}" >> $GITHUB_OUTPUT
-          else
-            echo "matrix={\"version\":[\"${CHANGES//,/\",\"}\"]}" >> $GITHUB_OUTPUT
-          fi
+           if [ -z "$CHANGES" ]; then
+             echo "matrix={\"version\":[]}" >> $GITHUB_OUTPUT
+           else
+             echo "matrix={\"version\":[\"${CHANGES//,/\",\"}\"]}" >> $GITHUB_OUTPUT
+           fi
 
   build-and-push:
     needs: changes
@@ -92,33 +92,33 @@ jobs:
         id: prepare
         run: |
           VERSION="${{ matrix.version }}"
-          if [ -z "$VERSION" ]; then
-            echo "Error: Version is empty"
-            exit 1
-          fi
+           if [ -z "$VERSION" ]; then
+             echo "Error: Version is empty"
+             exit 1
+           fi
 
-          DOCKER_TAG="${VERSION//_/.}"
-          if [[ "$VERSION" == *"alpine"* ]]; then
-            DOCKERFILE="php-fpm/${DOCKER_TAG%-alpine}.Dockerfile"
-            IMAGE_NAME="ejklock/php-fpm-alpine:${DOCKER_TAG%-alpine}"
-          elif [[ "$VERSION" == "php_fpm" ]]; then
-            DOCKERFILE="php-fpm/Dockerfile"
-            IMAGE_NAME="ejklock/php-fpm:latest"
-          elif [[ "$VERSION" == "php_apache" ]]; then
-            DOCKERFILE="php-apache/Dockerfile"
-            IMAGE_NAME="ejklock/php-apache:latest"
-          else
-            DOCKERFILE="php-fpm/${DOCKER_TAG}.Dockerfile"
-            IMAGE_NAME="ejklock/php-fpm:${DOCKER_TAG}"
-          fi
+           DOCKER_TAG="${VERSION//_/.}"
+           if [[ "$VERSION" == *"alpine"* ]]; then
+             DOCKERFILE="php-fpm/${DOCKER_TAG%-alpine}-alpine.Dockerfile"
+             IMAGE_NAME="ejklock/php-fpm-alpine:${DOCKER_TAG%-alpine}"
+           elif [[ "$VERSION" == "php_fpm" ]]; then
+             DOCKERFILE="php-fpm/Dockerfile"
+             IMAGE_NAME="ejklock/php-fpm:latest"
+           elif [[ "$VERSION" == "php_apache" ]]; then
+             DOCKERFILE="php-apache/Dockerfile"
+             IMAGE_NAME="ejklock/php-apache:latest"
+           else
+             DOCKERFILE="php-fpm/${DOCKER_TAG}.Dockerfile"
+             IMAGE_NAME="ejklock/php-fpm:${DOCKER_TAG}"
+           fi
 
-          if [ ! -f "$DOCKERFILE" ]; then
-            echo "Error: Dockerfile not found: $DOCKERFILE"
-            exit 1
-          fi
+           if [ ! -f "$DOCKERFILE" ]; then
+             echo "Error: Dockerfile not found: $DOCKERFILE"
+             exit 1
+           fi
 
-          echo "dockerfile=$DOCKERFILE" >> $GITHUB_OUTPUT
-          echo "image_name=$IMAGE_NAME" >> $GITHUB_OUTPUT
+           echo "dockerfile=$DOCKERFILE" >> $GITHUB_OUTPUT
+           echo "image_name=$IMAGE_NAME" >> $GITHUB_OUTPUT
 
       - name: Build and push image
         uses: docker/build-push-action@v4
