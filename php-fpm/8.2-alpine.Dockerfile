@@ -3,7 +3,6 @@ FROM php:8.2-fpm-alpine
 # Arguments defined in docker-compose.yml
 ARG uid=1000
 ARG user=app
-
 RUN apk update && apk upgrade && apk add --no-cache \
     linux-headers git curl postgresql-dev ${PHPIZE_DEPS} imagemagick \ 
     imagemagick-dev gettext-dev libpng-dev oniguruma-dev \
