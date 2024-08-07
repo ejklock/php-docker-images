@@ -28,12 +28,12 @@ jobs:
     needs: changes
     if: ${{ needs.changes.outputs.matrix != '{"version":[]}' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 60
     concurrency:
-      group: docker-build-${{ github.head_ref || github.run_id }}
-      cancel-in-progress: true
+      group: docker-build-${{ github.workflow }}-${{ github.event_name }}
+      cancel-in-progress: false
     strategy:
-      matrix: ${{fromJson(needs.changes.outputs.matrix)}}
+      matrix: ${{ fromJson(needs.changes.outputs.matrix) }}
+      max-parallel: 1
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
