@@ -4,6 +4,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 ARG uid=1000
 ARG user=app
+
 ENV NVM_DIR=/home/${user}/.nvm
 ENV NODE_VERSION=18.20.3
 
@@ -18,7 +19,6 @@ RUN docker-php-ext-enable imagick xdebug
 RUN docker-php-ext-configure gd --enable-gd --with-freetype --with-jpeg --with-webp
 RUN cd /usr/src/php/ext/gd && make
 RUN docker-php-ext-configure pgsql -with-pgsql=/usr/local/pgsql
-
 RUN docker-php-ext-install -j$(nproc) gd gettext zip pgsql pdo_pgsql pdo_mysql mbstring intl exif pcntl bcmath gmp mysqli ldap opcache sockets
 
 RUN echo 'memory_limit=2G' > /usr/local/etc/php/conf.d/memory-limit.ini
