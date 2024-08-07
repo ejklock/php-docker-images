@@ -27,63 +27,47 @@ jobs:
               - 'php-fpm/**'
             5_5:
               - 'php-fpm/5.5.Dockerfile'
-              - 'php-fpm/5.5.DockerFile'
             7_0:
               - 'php-fpm/7.0.Dockerfile'
-              - 'php-fpm/7.0.DockerFile'
             7_0_alpine:
               - 'php-fpm/7.0-alpine.Dockerfile'
-              - 'php-fpm/7.0-alpine.DockerFile'
             7_1:
               - 'php-fpm/7.1.Dockerfile'
-              - 'php-fpm/7.1.DockerFile'
             7_1_alpine:
               - 'php-fpm/7.1-alpine.Dockerfile'
-              - 'php-fpm/7.1-alpine.DockerFile'
             7_2:
               - 'php-fpm/7.2.Dockerfile'
-              - 'php-fpm/7.2.DockerFile'
             7_2_alpine:
               - 'php-fpm/7.2-alpine.Dockerfile'
-              - 'php-fpm/7.2-alpine.DockerFile'
             7_3:
               - 'php-fpm/7.3.Dockerfile'
-              - 'php-fpm/7.3.DockerFile'
             7_3_alpine:
               - 'php-fpm/7.3-alpine.Dockerfile'
-              - 'php-fpm/7.3-alpine.DockerFile'
             7_4:
               - 'php-fpm/7.4.Dockerfile'
-              - 'php-fpm/7.4.DockerFile'
             7_4_alpine:
               - 'php-fpm/7.4-alpine.Dockerfile'
-              - 'php-fpm/7.4-alpine.DockerFile'
-            7_4_progress:
-              - 'php-fpm/7.4-progress.Dockerfile'
-              - 'php-fpm/7.4-progress.DockerFile'
             8_0:
               - 'php-fpm/8.0.Dockerfile'
-              - 'php-fpm/8.0.DockerFile'
             8_0_alpine:
               - 'php-fpm/8.0-alpine.Dockerfile'
-              - 'php-fpm/8.0-alpine.DockerFile'
             8_1:
               - 'php-fpm/8.1.Dockerfile'
-              - 'php-fpm/8.1.DockerFile'
             8_1_alpine:
               - 'php-fpm/8.1-alpine.Dockerfile'
-              - 'php-fpm/8.1-alpine.DockerFile'
             8_2:
               - 'php-fpm/8.2.Dockerfile'
-              - 'php-fpm/8.2.DockerFile'
             8_2_alpine:
               - 'php-fpm/8.2-alpine.Dockerfile'
-              - 'php-fpm/8.2-alpine.DockerFile'
 
       - id: set-matrix
         run: |
           CHANGES=$(echo '${{ toJSON(steps.changes.outputs) }}' | jq -r 'to_entries | map(select(.value == "true")) | map(.key) | join(",")')
-          echo "matrix={\"version\":[\"${CHANGES//,/\",\"}\"]}" >> $GITHUB_OUTPUT
+          if [ -z "$CHANGES" ]; then
+            echo "matrix={\"version\":[]}" >> $GITHUB_OUTPUT
+          else
+            echo "matrix={\"version\":[\"${CHANGES//,/\",\"}\"]}" >> $GITHUB_OUTPUT
+          fi
 
   build-and-push:
     needs: changes
