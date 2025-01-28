@@ -27,7 +27,7 @@ jobs:
   build-and-push:
     needs: changes
     if: ${{ needs.changes.outputs.matrix != '{"version":[]}' }}
-    runs-on: ubuntu-latest
+    runs-on: [ubuntu-latest, macos-latest]
     concurrency:
       group: docker-build-${{ github.workflow }}-${{ github.event_name }}-${{ github.run_id }}
       cancel-in-progress: false
