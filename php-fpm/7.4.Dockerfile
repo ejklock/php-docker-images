@@ -11,8 +11,8 @@ RUN apt-get update && apt-get upgrade -y &&  apt-get install -y --no-install-rec
     libpng-dev libzip-dev g++ && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 
-RUN pecl install imagick-3.4.4
-RUN docker-php-ext-enable imagick
+RUN pecl install imagick xdebug-3.1.5 redis
+RUN docker-php-ext-enable imagick xdebug redis
 RUN docker-php-ext-configure gd --enable-gd --with-freetype --with-jpeg --with-webp
 RUN cd /usr/src/php/ext/gd && make
 RUN docker-php-ext-configure pgsql -with-pgsql=/usr/local/pgsql
