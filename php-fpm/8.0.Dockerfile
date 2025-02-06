@@ -1,4 +1,4 @@
-FROM php:8.0-fpm
+FROM php:8.4.3RC1-fpm
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
