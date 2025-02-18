@@ -4,25 +4,62 @@ FROM php:7.1-fpm
 ARG uid=1000
 ARG user=app
 
-RUN apt-get update && apt upgrade -y && apt-get install -y --no-install-recommends \
-    libldap2-dev libpq-dev git curl libpng-dev libonig-dev libzip-dev \
-    libxml2-dev unzip libfreetype6-dev libwebp-dev \
-    libjpeg62-turbo-dev libpng-dev libgmp-dev \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+# Install system dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    curl \
+    git \
+    libfreetype6-dev \
+    libgmp-dev \
+    libjpeg62-turbo-dev \
+    libldap2-dev \
+    libonig-dev \
+    libpng-dev \
+    libpq-dev \
+    libwebp-dev \
+    libxml2-dev \
+    libzip-dev \
+    unzip && \
+    rm -rf /var/lib/apt/lists/*
 
-RUN pecl install xdebug-2.9.8 && docker-php-ext-enable xdebug
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
-RUN docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-webp-dir=/usr/include/ --with-jpeg-dir=/usr/include/
-RUN docker-php-ext-configure ldap --with-libdir=lib/x86_64-linux-gnu/
-RUN docker-php-ext-configure pgsql -with-pgsql=/usr/local/pgsql
-RUN docker-php-ext-install gd gettext zip pgsql pdo_pgsql pdo_mysql mbstring intl exif pcntl bcmath gmp mysqli ldap opcache sockets
+# Install and configure PHP extensions
+RUN pecl install xdebug-2.9.8 && \
+    docker-php-ext-enable xdebug
 
+# Configure PHP extensions
+RUN docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-webp-dir=/usr/include/ --with-jpeg-dir=/usr/include/ && \
+    docker-php-ext-configure ldap --with-libdir=lib/x86_64-linux-gnu/ && \
+    docker-php-ext-configure pgsql -with-pgsql=/usr/local/pgsql
+
+# Install PHP extensions
+RUN docker-php-ext-install \
+    bcmath \
+    exif \
+    gd \
+    gettext \
+    gmp \
+    intl \
+    ldap \
+    mbstring \
+    mysqli \
+    opcache \
+    pcntl \
+    pdo_mysql \
+    pdo_pgsql \
+    pgsql \
+    sockets \
+    zip
+
+# Set PHP memory limit
 RUN echo 'memory_limit=2G' > /usr/local/etc/php/conf.d/memory-limit.ini
 
+# Install composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-RUN useradd -G www-data,root -u $uid -d /home/$user $user
-RUN mkdir -p /home/$user/.composer && chown -R $user:$user /home/$user
+# Create user and set permissions
+RUN useradd -G www-data,root -u $uid -d /home/$user $user && \
+    mkdir -p /home/$user/.composer && \
+    chown -R $user:$user /home/$user
 
 WORKDIR /var/www/app
 

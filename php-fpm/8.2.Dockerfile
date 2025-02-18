@@ -4,27 +4,66 @@ FROM php:8.2-fpm
 ARG uid=1000
 ARG user=app
 
-RUN apt-get update && apt-get upgrade -y &&  apt-get install --no-install-recommends -y \
-    git curl libpq-dev libpng-dev libonig-dev libmagickwand-dev\
-    libzip-dev libldap2-dev libxml2-dev unzip libwebp-dev libpng-dev \
-    libgmp-dev libfreetype6-dev libmagickwand-dev libjpeg62-turbo-dev \
-    libpng-dev libzip-dev g++ && apt-get clean && rm -rf /var/lib/apt/lists/*
+# Install system dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    curl \
+    g++ \
+    git \
+    libfreetype6-dev \
+    libgmp-dev \
+    libjpeg62-turbo-dev \
+    libldap2-dev \
+    libmagickwand-dev \
+    libonig-dev \
+    libpng-dev \
+    libpq-dev \
+    libwebp-dev \
+    libxml2-dev \
+    libzip-dev \
+    unzip && \
+    rm -rf /var/lib/apt/lists/*
 
-RUN pecl install imagick xdebug
-RUN docker-php-ext-enable imagick xdebug
-RUN docker-php-ext-configure gd --enable-gd --with-freetype --with-jpeg --with-webp
-RUN cd /usr/src/php/ext/gd && make
+# Install PHP extensions
+RUN pecl install imagick xdebug && \
+    docker-php-ext-enable imagick xdebug
+
+# Configure and install GD
+RUN docker-php-ext-configure gd --enable-gd --with-freetype --with-jpeg --with-webp && \
+    cd /usr/src/php/ext/gd && make
+
+# Configure and install PostgreSQL
 RUN docker-php-ext-configure pgsql -with-pgsql=/usr/local/pgsql
 
-RUN docker-php-ext-install -j$(nproc) gd gettext zip pgsql pdo_pgsql pdo_mysql mbstring intl exif pcntl bcmath gmp mysqli ldap opcache sockets
+# Install PHP extensions
+RUN docker-php-ext-install -j$(nproc) \
+    bcmath \
+    exif \
+    gd \
+    gettext \
+    gmp \
+    intl \
+    ldap \
+    mbstring \
+    mysqli \
+    opcache \
+    pcntl \
+    pdo_mysql \
+    pdo_pgsql \
+    pgsql \
+    sockets \
+    zip
 
+# Configure PHP
 RUN echo 'memory_limit=2G' > /usr/local/etc/php/conf.d/memory-limit.ini
 
+# Install composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-RUN useradd -G www-data,root -u $uid -d /home/$user $user
-
-RUN mkdir -p /home/$user/.composer && chown -R $user:$user /home/$user
+# Create user and set permissions
+RUN useradd -G www-data,root -u $uid -d /home/$user $user && \
+    mkdir -p /home/$user/.composer && \
+    chown -R $user:$user /home/$user
 
 WORKDIR /var/www/app
 
