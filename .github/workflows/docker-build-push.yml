@@ -92,6 +92,6 @@ jobs:
           context: ${{ contains(steps.prepare.outputs.dockerfile, 'php-apache') && './php-apache' || './php-fpm' }}
           file: ${{ steps.prepare.outputs.dockerfile }}
           push: true
-          platforms: linux/amd64,linux/arm64, linux/arm64/v8, darwin
+          platforms: linux/amd64,linux/arm64
           tags: ${{ steps.prepare.outputs.image_name }}
         continue-on-error: true
