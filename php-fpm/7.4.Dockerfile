@@ -4,61 +4,54 @@ FROM php:7.4-fpm
 ARG uid=1000
 ARG user=app
 
-# Install system packages - Split into multiple RUN commands to handle ARM64 QEMU issues
-RUN set -eux; \
-    apt-get update; \
+# Install system packages
+RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     git \
     curl \
-    unzip
-
-RUN set -eux; \
-    apt-get update; \
-    apt-get install -y --no-install-recommends \
     libpq-dev \
     libpng-dev \
     libonig-dev \
-    libzip-dev
-
-RUN set -eux; \
-    apt-get update; \
-    apt-get install -y --no-install-recommends \
+    libzip-dev \
     libldap2-dev \
     libxml2-dev \
+    unzip \
     libwebp-dev \
-    libgmp-dev
-
-RUN set -eux; \
-    apt-get update; \
-    apt-get install -y --no-install-recommends \
+    libgmp-dev \
     libfreetype6-dev \
     libmagickwand-dev \
     libjpeg62-turbo-dev \
-    g++; \
-    apt-get clean; \
+    g++ && \
+    apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Install PHP extensions one at a time to reduce memory pressure
-RUN pecl install imagick
-RUN docker-php-ext-enable imagick
-RUN pecl install xdebug-3.1.5
-RUN docker-php-ext-enable xdebug
-RUN pecl install redis
-RUN docker-php-ext-enable redis
+# Install PHP extensions
+RUN pecl install imagick xdebug-3.1.5 redis && \
+    docker-php-ext-enable imagick xdebug redis
 
-# Configure and install GD with reduced parallelism for ARM64
+# Configure and install GD
 RUN docker-php-ext-configure gd --enable-gd --with-freetype --with-jpeg --with-webp && \
-    docker-php-ext-install -j2 gd
+    docker-php-ext-install -j$(nproc) gd
 
-# Configure and install PostgreSQL with reduced parallelism
+# Configure and install PostgreSQL
 RUN docker-php-ext-configure pgsql -with-pgsql=/usr/local/pgsql && \
-    docker-php-ext-install -j2 pgsql pdo_pgsql
+    docker-php-ext-install pgsql pdo_pgsql
 
-# Install remaining PHP extensions in smaller batches with reduced parallelism
-RUN docker-php-ext-install -j2 gettext zip pdo_mysql mbstring
-RUN docker-php-ext-install -j2 intl exif pcntl bcmath
-RUN docker-php-ext-install -j2 gmp mysqli ldap
-RUN docker-php-ext-install -j2 opcache sockets
+# Install remaining PHP extensions
+RUN docker-php-ext-install -j$(nproc) \
+    gettext \
+    zip \
+    pdo_mysql \
+    mbstring \
+    intl \
+    exif \
+    pcntl \
+    bcmath \
+    gmp \
+    mysqli \
+    ldap \
+    opcache \
+    sockets
 
 # Set PHP memory limit
 RUN echo 'memory_limit=2G' > /usr/local/etc/php/conf.d/memory-limit.ini

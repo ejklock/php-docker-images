@@ -21,42 +21,27 @@ jobs:
         id: set-matrix
         run: |
           versions=$(find php-apache php-fpm -type f -name '*.Dockerfile' | sed -e 's|php-apache/||' -e 's|php-fpm/||' -e 's|.Dockerfile||' | tr '\n' ',')
-          versions="${versions%,}" # Remove the trailing comma
+          versions="${versions%,}"
           echo "matrix={\"version\":[\"${versions//,/\",\"}\"]}" >> $GITHUB_OUTPUT
 
   build-and-push:
     needs: changes
     if: ${{ needs.changes.outputs.matrix != '{"version":[]}' }}
     runs-on: ubuntu-latest
-    concurrency:
-      group: docker-build-${{ github.workflow }}-${{ github.event_name }}-${{ github.run_id }}
-      cancel-in-progress: false
     strategy:
       matrix: ${{ fromJson(needs.changes.outputs.matrix) }}
-      max-parallel: 1
-      fail-fast: false # Added to continue with other versions if one fails
+      fail-fast: false
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # Add the QEMU fix here
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: arm64,amd64 # Explicitly specify platforms
+        run: docker run --rm --privileged multiarch/qemu-user-static --reset -p yes -c yes
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-        with:
-          platforms: linux/amd64,linux/arm64
-          driver-opts: |
-            image=moby/buildkit:buildx-stable-1
-            network=host
-
-      - name: Create a new Buildx builder
-        run: |
-          docker buildx create --use --name mybuilder --driver-opt network=host
-          docker buildx inspect --bootstrap
 
       - name: Login to DockerHub
         uses: docker/login-action@v2
@@ -104,19 +89,3 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.prepare.outputs.image_name }}
-          cache-from: type=registry,ref=${{ steps.prepare.outputs.image_name }}
-          cache-to: type=inline
-          build-args: |
-            BUILDKIT_STEP_LOG_MAX_SIZE=10485760
-            BUILDKIT_STEP_LOG_MAX_SPEED=10485760
-            DOCKER_BUILDKIT=1
-            BUILDKIT_PROGRESS=plain
-            COMPOSE_DOCKER_CLI_BUILD=1
-          provenance: false
-        continue-on-error: true
-
-      - name: Check build status
-        if: steps.build.outcome == 'failure'
-        run: |
-          echo "Build failed for ${{ steps.prepare.outputs.image_name }}"
-          echo "Please check the logs for more details"
