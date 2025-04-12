@@ -1,4 +1,4 @@
-FROM php:8.2-fpm-alpine
+FROM php:8.4.6-fpm-alpine
 
 # Arguments defined in docker-compose.yml
 ARG uid=1000
